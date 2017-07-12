@@ -1,7 +1,7 @@
 #!/usr/bin/env python2.7
 
 from rospy import init_node, Subscriber, sleep, spin
-from std_msgs.msg import UInt16
+from rospy.timer import time
 from sensor_msgs.msg import Image, PointCloud
 from razer_hydra.msg import Hydra
 from baxter_interface import Head, CameraController
@@ -22,6 +22,7 @@ sensor_locations = {
 	10.0: 1.0,
 	9.0: 1.3
 }
+timestamp = time.time()
 #window = Window('left camera')
 
 init_node('Hydra_teleop')
@@ -54,7 +55,7 @@ def subscribe(data):
 		if MOVE_HEAD:
 	        	print SENSOR_DATA
 			print closest_object
-			print 'closest object: ', closest_object[0], sensor_locations[closest_object[0]]
+			#print 'closest object: ', closest_object[0], sensor_locations[closest_object[0]]
 			print 'moving head..'
 			head.set_pan(sensor_locations[closest_object[0]])
 	#if j > 0.1:
@@ -68,12 +69,14 @@ def sonar(data):
 	sensors, distances = data.channels
 	global SENSOR_DATA
 	global closest_object
+	global timestamp
 
 	SENSOR_DATA = zip(sensors.values, distances.values)
 
 	objects_in_view = [sensor for sensor in SENSOR_DATA if sensor[0] in sensor_locations]
 	#print 'in view', objects_in_view
-	if objects_in_view:
+	if objects_in_view and time.time() - timestamp>= 3:
+		timestamp = time.time()
 		closest_object = min(objects_in_view, key=lambda a: a[1])
 
 def main():
