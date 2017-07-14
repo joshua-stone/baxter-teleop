@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 
-from baxter_interface import Limb, RobotEnable
+from baxter_interface import Limb, Head, RobotEnable
 from rospy import init_node
 
 __all__ = [
@@ -23,6 +23,8 @@ class Baxter(object):
             LEFT: self._left,
             RIGHT: self._right
         }
+
+	self._head = Head()
 
     def reset_limb(self, side):
         angles = {joint: 0.0 for joint in self._limbs[side].joint_angles()}
@@ -224,3 +226,11 @@ class Baxter(object):
         self.enable_check()
         self._right.set_joint_positions(joints)
 
+    @property
+    def head_position(self):
+        return self._head.pan()
+
+    @head_position.setter
+    def head_position(self, position):
+        #current_position = self._head.pan()
+	self._head.set_pan(position)

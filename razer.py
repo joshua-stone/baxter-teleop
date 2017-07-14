@@ -129,7 +129,8 @@ def subscribe(data):
 		#-1.40397596359
 		# 1.32229149342
 			print distance, j, head.pan()
-			head.set_pan(head.pan() - distance)
+			b.head_position -= distance
+
 	elif controller.right_middle and closest_object:
 		head.set_pan(sensor_locations[closest_object[0]])
 	elif controller.right_4 and current_time - last_nod >= 1:
@@ -142,9 +143,9 @@ def subscribe(data):
 		else:
 			position = -0.25
 
-		head.set_pan(head.pan() - position)
+		b.head_position -= position
 		rospy.sleep(0.1)
-		head.set_pan(head.pan() + position)
+		b.head_position += position
 
 	else:
 		pass
