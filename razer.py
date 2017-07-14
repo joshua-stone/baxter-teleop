@@ -121,27 +121,9 @@ print 'starting'
 def subscribe(data):
 	controller = HydraController(data)
 	global SENSOR_DATA, closest_object, last_nod
-	#if head.nodding():
-	#	print 'nod'
-	left, right = data.paddles
-	j = right.joy[0]
-	#print left.joy
-	lbuttons, rbuttons = left.buttons, right.buttons
-	#print lbuttons
-	left_gripper_position = left.trigger
-	right_gripper_position = right.trigger
-	MOVE_LEFT_CUFF_CLOCKWISE = lbuttons[1]
-	MOVE_LEFT_CUFF_COUNTERCLOCKWISE = lbuttons[3]
-        MOVE_RIGHT_CUFF_CLOCKWISE = rbuttons[1]
-        MOVE_RIGHT_CUFF_COUNTERCLOCKWISE = rbuttons[3]
-	ENABLE_LEFT_GRIPPER = lbuttons[0]
-	ENABLE_RIGHT_GRIPPER = rbuttons[0]
-	ENABLE_PAN = rbuttons[6]	
-	MOVE_HEAD = rbuttons[5]
-	#print j * -0.0001
-	#three = rbuttons[3]
-	#one = rbuttons[1]
+	
 	if controller.right_joy_press:
+		j = controller.right_joy_horizontal
 		distance = j * 0.1
 		if not -0.01 < j < 0.01:
 		#-1.40397596359
@@ -149,24 +131,19 @@ def subscribe(data):
 			print distance, j, head.pan()
 			head.set_pan(head.pan() - distance)
 	elif controller.right_middle and closest_object:
-	        	#print SENSOR_DATA
-			#print closest_object
-			#print 'closest object: ', closest_object[0], sensor_locations[closest_object[0]]
-			#print 'moving head..'
 		head.set_pan(sensor_locations[closest_object[0]])
-	elif controller.right_4 and time.time() - last_nod >= 2:
-		print 'nod'
+	elif controller.right_4 and time.time() - last_nod >= 1:
 		last_nod = time.time()
 		head.command_nod()
 	else:
 		pass
-	if MOVE_LEFT_CUFF_CLOCKWISE:
+	if controller.left_3:
 		b.left_w2 += 0.1
-	if MOVE_LEFT_CUFF_COUNTERCLOCKWISE:
+	if controller.left_1:
 		b.left_w2 -= 0.1
-        if MOVE_RIGHT_CUFF_CLOCKWISE:
+        if controller.right_3:
 		b.right_w2 += 0.1
-        if MOVE_RIGHT_CUFF_COUNTERCLOCKWISE:
+        if controller.right_1:
 		b.right_w2 -= 0.1
 	if controller.left_trigger_1:
                 left_pos = left_gripper_max - (controller.left_trigger_2 * 100.0)
@@ -174,6 +151,7 @@ def subscribe(data):
 	if controller.right_trigger_1:
 		right_pos = right_gripper_max - (controller.right_trigger_2 * 100.0)
 		right_gripper.command_position(right_pos)
+
 def camera_subscribe(data):
 	window.display(data)
 
