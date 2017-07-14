@@ -7,6 +7,7 @@ from razer_hydra.msg import Hydra
 from baxter_interface import Head, CameraController, Gripper, Limb
 from lib.window import Window
 from lib.baxter import Baxter
+from lib.hydracontroller import HydraController
 import rospy
 
 CONTROLLER = '/hydra_calib'
@@ -26,6 +27,7 @@ sensor_locations = {
 }
 timestamp = time.time()
 #window = Window('left camera')
+last_nod = time.time()
 
 init_node('Hydra_teleop')
 
@@ -117,12 +119,15 @@ print 'Openning right camera'
 print 'starting'
 
 def subscribe(data):
-	global SENSOR_DATA, closest_object
+	controller = HydraController(data)
+	global SENSOR_DATA, closest_object, last_nod
 	#if head.nodding():
 	#	print 'nod'
 	left, right = data.paddles
 	j = right.joy[0]
+	#print left.joy
 	lbuttons, rbuttons = left.buttons, right.buttons
+	#print lbuttons
 	left_gripper_position = left.trigger
 	right_gripper_position = right.trigger
 	MOVE_LEFT_CUFF_CLOCKWISE = lbuttons[1]
@@ -136,20 +141,25 @@ def subscribe(data):
 	#print j * -0.0001
 	#three = rbuttons[3]
 	#one = rbuttons[1]
-	if ENABLE_PAN:
+	if controller.right_joy_press:
 		distance = j * 0.1
 		if not -0.01 < j < 0.01:
 		#-1.40397596359
 		# 1.32229149342
 			print distance, j, head.pan()
 			head.set_pan(head.pan() - distance)
-	else:
-		if MOVE_HEAD:
+	elif controller.right_middle and closest_object:
 	        	#print SENSOR_DATA
 			#print closest_object
 			#print 'closest object: ', closest_object[0], sensor_locations[closest_object[0]]
 			#print 'moving head..'
-			head.set_pan(sensor_locations[closest_object[0]])
+		head.set_pan(sensor_locations[closest_object[0]])
+	elif controller.right_4 and time.time() - last_nod >= 2:
+		print 'nod'
+		last_nod = time.time()
+		head.command_nod()
+	else:
+		pass
 	if MOVE_LEFT_CUFF_CLOCKWISE:
 		b.left_w2 += 0.1
 	if MOVE_LEFT_CUFF_COUNTERCLOCKWISE:
@@ -158,15 +168,12 @@ def subscribe(data):
 		b.right_w2 += 0.1
         if MOVE_RIGHT_CUFF_COUNTERCLOCKWISE:
 		b.right_w2 -= 0.1
-	if ENABLE_LEFT_GRIPPER:
-                left_pos = left_gripper_max - (left_gripper_position * 100.0)
-                #print left_gripper.position(), left_pos
+	if controller.left_trigger_1:
+                left_pos = left_gripper_max - (controller.left_trigger_2 * 100.0)
                 left_gripper.command_position(left_pos)
-	if ENABLE_RIGHT_GRIPPER:
-		right_pos = right_gripper_max - (right_gripper_position * 100.0)
-		#print right_gripper.position(), right_pos
+	if controller.right_trigger_1:
+		right_pos = right_gripper_max - (controller.right_trigger_2 * 100.0)
 		right_gripper.command_position(right_pos)
-		#print 'is enabled', position
 def camera_subscribe(data):
 	window.display(data)
 
