@@ -4,8 +4,9 @@ from rospy import init_node, Subscriber, sleep, spin
 from rospy.timer import time
 from sensor_msgs.msg import Image, PointCloud
 from razer_hydra.msg import Hydra
-from baxter_interface import Head, CameraController, Gripper
+from baxter_interface import Head, CameraController, Gripper, Limb
 from lib.window import Window
+from lib.baxter import Baxter
 import rospy
 
 CONTROLLER = '/hydra_calib'
@@ -28,13 +29,14 @@ timestamp = time.time()
 
 init_node('Hydra_teleop')
 
+b = Baxter()
 left_gripper, right_gripper = Gripper('left'), Gripper('right')
 
 # Min and max position vary each time
 def gripper_calibrate(gripper):
 	# A minimum timeout is required so gripper has enough time to move
 	# Otherwise an incorrect position will be reported
-	WAIT = 0.50
+	WAIT = 0.5
 	gripper.calibrate()
 
 	gripper.open()
@@ -57,6 +59,27 @@ left_gripper_min, left_gripper_max = gripper_calibrate(left_gripper)
 print 'Calibrating right gripper'
 right_gripper_min, right_gripper_max = gripper_calibrate(right_gripper)
 
+#left_arm = Limb('left')
+#right_arm = Limb('right')
+
+
+#left_joint_angles = left_arm.joint_angles()
+
+#print left_arm.joint_angle('left_w2')
+
+#left_joint_angles['left_w2'] = 0
+#print left_joint_angles['left_w2']
+#rospy.sleep(2)
+#left_arm.set_joint_positions(left_joint_angles)
+#rospy.sleep(5)
+#print left_arm.joint_angle('left_w2')
+
+#rospy.sleep(2)
+#right_joint_angles = right_arm.joint_angles()
+#right_joint_angles['right_w2'] = 0
+#right_arm.set_joint_positions(right_joint_angles)
+
+#rospy.sleep(2)
 print 'left gripper: ', left_gripper_min, left_gripper_max
 print 'right_gripper: ', right_gripper_min, right_gripper_max
 
@@ -99,14 +122,21 @@ def subscribe(data):
 	#	print 'nod'
 	left, right = data.paddles
 	j = right.joy[0]
-	b = right.buttons
-	#print b
-	ENABLED = b[6]	
-	MOVE_HEAD = b[5]
+	lbuttons, rbuttons = left.buttons, right.buttons
+	left_gripper_position = left.trigger
+	right_gripper_position = right.trigger
+	MOVE_LEFT_CUFF_CLOCKWISE = lbuttons[1]
+	MOVE_LEFT_CUFF_COUNTERCLOCKWISE = lbuttons[3]
+        MOVE_RIGHT_CUFF_CLOCKWISE = rbuttons[1]
+        MOVE_RIGHT_CUFF_COUNTERCLOCKWISE = rbuttons[3]
+	ENABLE_LEFT_GRIPPER = lbuttons[0]
+	ENABLE_RIGHT_GRIPPER = rbuttons[0]
+	ENABLE_PAN = rbuttons[6]	
+	MOVE_HEAD = rbuttons[5]
 	#print j * -0.0001
-	three = b[3]
-	one = b[1]
-	if ENABLED:
+	#three = rbuttons[3]
+	#one = rbuttons[1]
+	if ENABLE_PAN:
 		distance = j * 0.1
 		if not -0.01 < j < 0.01:
 		#-1.40397596359
@@ -120,10 +150,23 @@ def subscribe(data):
 			#print 'closest object: ', closest_object[0], sensor_locations[closest_object[0]]
 			#print 'moving head..'
 			head.set_pan(sensor_locations[closest_object[0]])
-	#if j > 0.1:
-        #        print distance, head.pan()
-                #head.set_pan(head.pan() + 0.0)
-
+	if MOVE_LEFT_CUFF_CLOCKWISE:
+		b.left_w2 += 0.1
+	if MOVE_LEFT_CUFF_COUNTERCLOCKWISE:
+		b.left_w2 -= 0.1
+        if MOVE_RIGHT_CUFF_CLOCKWISE:
+		b.right_w2 += 0.1
+        if MOVE_RIGHT_CUFF_COUNTERCLOCKWISE:
+		b.right_w2 -= 0.1
+	if ENABLE_LEFT_GRIPPER:
+                left_pos = left_gripper_max - (left_gripper_position * 100.0)
+                #print left_gripper.position(), left_pos
+                left_gripper.command_position(left_pos)
+	if ENABLE_RIGHT_GRIPPER:
+		right_pos = right_gripper_max - (right_gripper_position * 100.0)
+		#print right_gripper.position(), right_pos
+		right_gripper.command_position(right_pos)
+		#print 'is enabled', position
 def camera_subscribe(data):
 	window.display(data)
 
@@ -140,7 +183,7 @@ def sonar(data):
 	if objects_in_view and time.time() - timestamp>= 3:
 		timestamp = time.time()
 		closest_object = min(objects_in_view, key=lambda a: a[1])
-
+ 
 def main():
 	Subscriber(CONTROLLER, Hydra, subscribe)
 	Subscriber(SONAR, PointCloud, sonar)
