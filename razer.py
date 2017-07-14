@@ -121,7 +121,7 @@ print 'starting'
 def subscribe(data):
 	controller = HydraController(data)
 	global SENSOR_DATA, closest_object, last_nod
-	
+	current_time = time.time()
 	if controller.right_joy_press:
 		j = controller.right_joy_horizontal
 		distance = j * 0.1
@@ -132,9 +132,20 @@ def subscribe(data):
 			head.set_pan(head.pan() - distance)
 	elif controller.right_middle and closest_object:
 		head.set_pan(sensor_locations[closest_object[0]])
-	elif controller.right_4 and time.time() - last_nod >= 1:
+	elif controller.right_4 and current_time - last_nod >= 1:
 		last_nod = time.time()
 		head.command_nod()
+	elif controller.right_2 and current_time - last_nod >= 1:
+		last_nod = time.time()
+		if head.pan() > 0:
+			position = 0.25
+		else:
+			position = -0.25
+
+		head.set_pan(head.pan() - position)
+		rospy.sleep(0.1)
+		head.set_pan(head.pan() + position)
+
 	else:
 		pass
 	if controller.left_3:
