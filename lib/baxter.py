@@ -262,17 +262,18 @@ class Baxter(object):
         for key, value in position.iteritems():
             pos[key] = value
 
-	orientat = {
+	orient = {
             'x': self.left_orientation_x,
             'y': self.left_orientation_y,
             'z': self.left_orientation_z,
             'w': self.left_orientation_w,
         }
         for key, value in orientation.iteritems():
-            orientat[key] = value
+            orient[key] = value
 
 
-        pos = self._left_ikservice.solve_position(Pose(position=Point(**pos), orientation=Quaternion(**orientat)))
+        pos = self._left_ikservice.solve_position(Pose(position=Point(**pos),
+                                                  orientation=Quaternion(**orient)))
 
 	if pos:
             self.set_left_joints(pos)
@@ -280,6 +281,108 @@ class Baxter(object):
             print 'nothing'
 
 	print self.joints
+
+    @property
+    def right_position(self):
+        return self._right.endpoint_pose()['position']
+
+    @property
+    def right_position_x(self):
+        return self.right_position.x
+
+    @right_position_x.setter
+    def right_position_x(self, point):
+        self.set_right_pose(position={'x': point})
+
+    @property
+    def right_position_y(self):
+        return self.right_position.y
+
+    @right_position_y.setter
+    def right_position_y(self, point):
+        self.set_right_pose(position={'y': point})
+
+    @property
+    def right_position_z(self):
+        return self.right_position.z
+
+    @right_position_z.setter
+    def right_position_z(self, point):
+        self.set_right_pose(position={'z': point})
+
+    @property
+    def right_orientation(self):
+        return self._right.endpoint_pose()['orientation']
+
+    @property
+    def right_orientation_x(self):
+        return self.right_orientation.x
+
+    @right_orientation_x.setter
+    def right_orientation_x(self, point):
+        self.set_right_pose(orientation={'x': point})
+
+    @property
+    def right_orientation_y(self):
+        return self.right_orientation.y
+
+    @right_orientation_y.setter
+    def right_orientation_y(self, point):
+        self.set_right_pose(orientation={'y': point})
+
+    @property
+    def right_orientation_z(self):
+        return self.right_orientation.z
+
+    @right_orientation_z.setter
+    def right_orientation_z(self, point):
+        self.set_right_pose(orientation={'z': point})
+
+    @property
+    def right_orientation_w(self):
+        return self.right_orientation.w
+
+    @right_orientation_w.setter
+    def right_orientation_w(self, point):
+        self.set_right_pose(orientation={'w': point})
+
+    @property
+    def right_position(self):
+        return self._right.endpoint_pose()['position']
+
+    @property
+    def right_orientation(self):
+        return self._right.endpoint_pose()['orientation']
+
+    def set_right_pose(self, position={}, orientation={}):
+        pos = {
+            'x': self.right_position_x,
+            'y': self.right_position_y,
+            'z': self.right_position_z,
+        }
+        for key, value in position.iteritems():
+            pos[key] = value
+
+        orient = {
+            'x': self.right_orientation_x,
+            'y': self.right_orientation_y,
+            'z': self.right_orientation_z,
+            'w': self.right_orientation_w,
+        }
+        for key, value in orientation.iteritems():
+            orient[key] = value
+
+
+        pos = self._right_ikservice.solve_position(Pose(position=Point(**pos),
+                                                  orientation=Quaternion(**orient)))
+
+        if pos:
+            self.set_right_joints(pos)
+        else:
+            print 'nothing'
+
+        print self.joints
+
     @property
     def head_position(self):
         return self._head.pan()
