@@ -1,6 +1,8 @@
 #!/usr/bin/env python2
 
 from baxter_interface import Limb, Head, RobotEnable
+from geometry_msgs.msg import Pose, Point, Quaternion
+from lib.ikservice import IKService
 from rospy import init_node
 
 __all__ = [
@@ -25,6 +27,8 @@ class Baxter(object):
         }
 
 	self._head = Head()
+        self._left_ikservice = IKService('left')
+        self._right_ikservice = IKService('right')
 
     def set_left_joints(self, angles):
 	joints = self._left.joint_angles()
@@ -177,6 +181,105 @@ class Baxter(object):
     def right_w2(self, angle):
 	self.set_right_joints({'right_w2': angle})
 
+    @property
+    def left_position(self):
+        return self._left.endpoint_pose()['position']
+
+    @property
+    def left_position_x(self):
+        return self.left_position.x
+
+    @left_position_x.setter
+    def left_position_x(self, point):
+        self.set_left_pose(position={'x': point})
+
+    @property
+    def left_position_y(self):
+        return self.left_position.y
+
+    @left_position_y.setter
+    def left_position_y(self, point):
+        self.set_left_pose(position={'y': point})
+
+    @property
+    def left_position_z(self):
+        return self.left_position.z
+
+    @left_position_z.setter
+    def left_position_z(self, point):
+        self.set_left_pose(position={'z': point})
+
+    @property
+    def left_orientation(self):
+        return self._left.endpoint_pose()['orientation']
+
+    @property
+    def left_orientation_x(self):
+        return self.left_orientation.x
+
+    @left_orientation_x.setter
+    def left_orientation_x(self, point):
+        self.set_left_pose(orientation={'x': point})
+
+    @property
+    def left_orientation_y(self):
+        return self.left_orientation.y
+
+    @left_orientation_y.setter
+    def left_orientation_y(self, point):
+        self.set_left_pose(orientation={'y': point})
+
+    @property
+    def left_orientation_z(self):
+        return self.left_orientation.z
+
+    @left_orientation_z.setter
+    def left_orientation_z(self, point):
+        self.set_left_pose(orientation={'z': point})
+
+    @property
+    def left_orientation_w(self):
+        return self.left_orientation.w
+
+    @left_orientation_w.setter
+    def left_orientation_w(self, point):
+        self.set_left_pose(orientation={'w': point})
+
+    @property
+    def right_position(self):
+        return self._right.endpoint_pose()['position']
+
+    @property
+    def right_orientation(self):
+        return self._right.endpoint_pose()['orientation']
+
+    def set_left_pose(self, position={}, orientation={}):
+        pos = {
+            'x': self.left_position_x,
+            'y': self.left_position_y,
+            'z': self.left_position_z,
+        }
+        for key, value in position.iteritems():
+            pos[key] = value
+
+	orientat = {
+            'x': self.left_orientation_x,
+            'y': self.left_orientation_y,
+            'z': self.left_orientation_z,
+            'w': self.left_orientation_w,
+        }
+        for key, value in orientation.iteritems():
+            orientat[key] = value
+
+
+        pos = self._left_ikservice.solve_position(Pose(position=Point(**pos), orientation=Quaternion(**orientat)))
+
+	if pos:
+            self.set_left_joints(pos)
+	else:
+            print 'nothing'
+
+	print self.joints
     @property
     def head_position(self):
         return self._head.pan()
