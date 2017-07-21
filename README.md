@@ -51,3 +51,38 @@ cd -
 source /opt/ros/indigo/setup.bash
 catkin_make
 ```
+
+### 5. Sourcing environment variables
+
+Next, append the generated setup.bash file to ~/.bashrc so ROS environment variables are loaded every time you open a terminal:
+
+```bash
+echo "source /opt/ros/indigo/setup.bash" >> ~/.bashrc
+echo "${PWD}/devel/setup.bash" >> ~/.bashrc
+source ~/.bashrc
+```
+
+Also be sure that the roscore is set to the one in Baxter:
+
+```bash
+echo "export ROS_MASTER_URI=http://baxter.lan:11311" >> ~/.bashrc
+source ~/.bashrc
+```
+
+### 6. Starting the controller
+
+The controller should now be able to run over ROS:
+
+```bash
+roslaunch razer_hydra hydra.launch
+```
+
+### 7. Running the Hydra teleop program
+
+Be sure that the base station is placed on a stable surface and positioned like in the [reference manual](https://www.manualslib.com/manual/513849/Razer-Hydra.html?page=3#manual).
+
+When ready, run this:
+
+```bash
+python razer.py
+```
