@@ -62,32 +62,12 @@ left_gripper_min, left_gripper_max = gripper_calibrate(left_gripper)
 print 'Calibrating right gripper'
 right_gripper_min, right_gripper_max = gripper_calibrate(right_gripper)
 
-#left_arm = Limb('left')
-#right_arm = Limb('right')
-
-
-#left_joint_angles = left_arm.joint_angles()
-
-#print left_arm.joint_angle('left_w2')
-
-#left_joint_angles['left_w2'] = 0
-#print left_joint_angles['left_w2']
-#rospy.sleep(2)
-#left_arm.set_joint_positions(left_joint_angles)
-#rospy.sleep(5)
-#print left_arm.joint_angle('left_w2')
-
-#rospy.sleep(2)
-#right_joint_angles = right_arm.joint_angles()
-#right_joint_angles['right_w2'] = 0
-#right_arm.set_joint_positions(right_joint_angles)
-
-#rospy.sleep(2)
 print 'left gripper: ', left_gripper_min, left_gripper_max
 print 'right_gripper: ', right_gripper_min, right_gripper_max
 
 head = Head()
 
+'''
 def camera_setup():
 	print 'Setting up head camera'
 
@@ -105,22 +85,13 @@ def camera_setup():
 	right_camera.close()
 
 	head_camera.open()
+'''
 
-#camera_setup()
-
-#left_camera = CameraController('left_hand_camera')
-#right_camera = CameraController('right_hand_camera')
-
-#left_camera.open()
-
-print 'Openning right camera'
-#rospy.sleep(5)
-
-#right_camera.open()
 print 'starting'
 
 def subscribe(data):
-	controller = HydraController(data)
+	# Shift controller coordinates to be higher and back so operator can move comfortably
+	controller = HydraController(data, x_offset=0.5, z_offset=-0.5)
 	global SENSOR_DATA, closest_object, last_nod, last_left_pose, last_right_pose
 	current_time = time.time()
 	current_left_pose = time.time()
@@ -130,8 +101,8 @@ def subscribe(data):
 		j = controller.right_joy_horizontal
 		distance = j * 0.1
 		if not -0.01 < j < 0.01:
-		#-1.40397596359
-		# 1.32229149342
+		# Min position: -1.40397596359
+		# Max position: 1.32229149342
 			print distance, j, head.pan()
 			b.head_position -= distance
 
@@ -153,18 +124,18 @@ def subscribe(data):
 
 	else:
 		pass
-	if controller.right_4 and current_right_pose - last_right_pose > 0.1:
-		x = controller.right_translation.x + 0.5
+	if controller.right_4 and current_right_pose - last_right_pose > 0.05:
+		x = controller.right_translation.x
 		y = controller.right_translation.y
-		z = controller.right_translation.z - 0.5
+		z = controller.right_translation.z
 		b.set_right_pose(position={'x': x, 'y': y, 'z':z})
 		last_right_pose = current_right_pose
 		print 'right baxter arm:', b.right_position
 		print 'right controller:', x, y, z
-        if controller.left_4 and current_left_pose - last_left_pose > 0.1:
-                x = controller.left_translation.x + 0.5
+        if controller.left_4 and current_left_pose - last_left_pose > 0.05:
+                x = controller.left_translation.x
                 y = controller.left_translation.y
-                z = controller.left_translation.z - 0.5
+                z = controller.left_translation.z
                 b.set_left_pose(position={'x': x, 'y': y, 'z':z})
                 last_left_pose = current_left_pose
                 print 'left baxter arm:', b.left_position

@@ -27,8 +27,8 @@ class Baxter(object):
         }
 
 	self._head = Head()
-        self._left_ikservice = IKService('left')
-        self._right_ikservice = IKService('right')
+        self._left_ikservice = IKService(LEFT)
+        self._right_ikservice = IKService(RIGHT)
 
     def set_left_joints(self, angles):
 	joints = self._left.joint_angles()
@@ -59,7 +59,7 @@ class Baxter(object):
 
     def enable_check(self):
         # Sometimes robot is disabled due to another program resetting state
-        if not self.enabled:
+        if not self._baxter_state.state().enabled:
             self._baxter_state.enable()
 
     @property
@@ -280,7 +280,7 @@ class Baxter(object):
 	else:
             print 'nothing'
 
-	print self.joints
+	#print self.joints
 
     @property
     def right_position(self):
@@ -378,10 +378,6 @@ class Baxter(object):
 
         if pos:
             self.set_right_joints(pos)
-        else:
-            print 'nothing'
-
-        print self.joints
 
     @property
     def head_position(self):

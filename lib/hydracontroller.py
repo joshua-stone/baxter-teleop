@@ -1,11 +1,21 @@
 class HydraController(object):
-	def __init__(self, data):
+	def __init__(self, data, x_offset=0.0, y_offset=0.0, z_offset=0.0):
 		self._left, self._right = data.paddles
 		self._lbuttons, self._rbuttons = self._left.buttons, self._right.buttons
 
 		self._ljoy, self._rjoy = self._left.joy, self._right.joy
 
 		self._ltrigger, self._rtrigger = self._left.trigger, self._right.trigger
+
+		self._ltransform, self._rtransform = self._left.transform, self._right.transform
+
+		self._ltransform.translation.x += x_offset
+		self._ltransform.translation.y += y_offset
+		self._ltransform.translation.z += z_offset
+
+		self._rtransform.translation.x += x_offset
+                self._rtransform.translation.y += y_offset
+                self._rtransform.translation.z += z_offset
 
         @property
         def left_trigger_1(self):
@@ -87,3 +97,18 @@ class HydraController(object):
         def right_trigger_2(self):
                 return self._rtrigger
 
+	@property
+	def left_translation(self):
+		return self._ltransform.translation
+
+	@property
+	def left_rotation(self):
+		return self._ltransform.rotation
+
+        @property
+        def right_translation(self):
+                return self._rtransform.translation
+
+        @property
+        def right_rotation(self):
+                return self._rtransform.rotation

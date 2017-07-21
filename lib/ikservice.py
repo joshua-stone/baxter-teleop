@@ -11,18 +11,13 @@ class IKService(object):
 
 		self._iksvc = rospy.ServiceProxy(self._limb_service, SolvePositionIK)
 		self._ikreq = SolvePositionIKRequest()
-	#	self._limb_position = limb_position
 
-	def solve_position(self, new_position):
-		position, orientat = new_position['position'], new_position['orientation']
+	def solve_position(self, pose):
 		header = Header(stamp=Time.now(), frame_id='base')
 
 		new_pose = PoseStamped(
 			header=header,
-			pose=Pose(
-				position=position,
-				orientation=orientat
-			)
+			pose=pose
 		)
 		
 		self._ikreq.pose_stamp = [new_pose]
@@ -31,7 +26,8 @@ class IKService(object):
 			rospy.wait_for_service(self._limb_service, 5.0)
 			resp = self._iksvc(self._ikreq)
 		except (rospy.ServiceException, rospy.ROSException), e:
-			rospy.logerr("Service call failed: %s" % (e,))
+			rospy.logerr('Service call failed: {}'.format(e))
+			return {}
 		
 		if (resp.isValid[0]):
 			limb_joints = dict(zip(resp.joints[0].name, resp.joints[0].position))
