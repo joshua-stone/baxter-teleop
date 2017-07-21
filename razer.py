@@ -28,7 +28,8 @@ sensor_locations = {
 timestamp = time.time()
 #window = Window('left camera')
 last_nod = time.time()
-
+last_left_pose = time.time()
+last_right_pose = time.time()
 init_node('Hydra_teleop')
 
 b = Baxter()
@@ -120,8 +121,11 @@ print 'starting'
 
 def subscribe(data):
 	controller = HydraController(data)
-	global SENSOR_DATA, closest_object, last_nod
+	global SENSOR_DATA, closest_object, last_nod, last_left_pose, last_right_pose
 	current_time = time.time()
+	current_left_pose = time.time()
+	current_right_pose = time.time()
+
 	if controller.right_joy_press:
 		j = controller.right_joy_horizontal
 		distance = j * 0.1
@@ -133,22 +137,39 @@ def subscribe(data):
 
 	elif controller.right_middle and closest_object:
 		head.set_pan(sensor_locations[closest_object[0]])
-	elif controller.right_4 and current_time - last_nod >= 1:
-		last_nod = time.time()
-		head.command_nod()
+	#elif controller.right_4 and current_time - last_nod >= 1:
+	#	last_nod = time.time()
+	#	head.command_nod()
 	elif controller.right_2 and current_time - last_nod >= 1:
 		last_nod = time.time()
-		if head.pan() > 0:
-			position = 0.25
+		if b.head_position > 0.0:
+			distance = 0.25
 		else:
-			position = -0.25
+			distance = -0.25
 
-		b.head_position -= position
+		b.head_position -= distance
 		rospy.sleep(0.1)
-		b.head_position += position
+		b.head_position += distance
 
 	else:
 		pass
+	if controller.right_4 and current_right_pose - last_right_pose > 0.1:
+		x = controller.right_translation.x
+		y = controller.right_translation.y
+		z = controller.right_translation.z
+		b.set_right_pose(position={'x': x, 'y': y, 'z':z})
+		last_right_pose = current_right_pose
+		print 'right baxter arm:', b.right_position
+		print 'right controller:', x, y, z
+        if controller.left_4 and current_left_pose - last_left_pose > 0.1:
+                x = controller.left_translation.x
+                y = controller.left_translation.y
+                z = controller.left_translation.z #- 0.25
+                b.set_left_pose(position={'x': x, 'y': y, 'z':z})
+                last_left_pose = current_left_pose
+                print 'left baxter arm:', b.left_position
+                print 'left controller:', x, y, z
+
 	if controller.left_3:
 		b.left_w2 += 0.1
 	if controller.left_1:
@@ -163,6 +184,7 @@ def subscribe(data):
 	if controller.right_trigger_1:
 		right_pos = right_gripper_max - (controller.right_trigger_2 * 100.0)
 		right_gripper.command_position(right_pos)
+
 
 def camera_subscribe(data):
 	window.display(data)
