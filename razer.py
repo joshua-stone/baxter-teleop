@@ -154,17 +154,17 @@ def subscribe(data):
 	else:
 		pass
 	if controller.right_4 and current_right_pose - last_right_pose > 0.1:
-		x = controller.right_translation.x
+		x = controller.right_translation.x + 0.5
 		y = controller.right_translation.y
-		z = controller.right_translation.z
+		z = controller.right_translation.z - 0.5
 		b.set_right_pose(position={'x': x, 'y': y, 'z':z})
 		last_right_pose = current_right_pose
 		print 'right baxter arm:', b.right_position
 		print 'right controller:', x, y, z
         if controller.left_4 and current_left_pose - last_left_pose > 0.1:
-                x = controller.left_translation.x
+                x = controller.left_translation.x + 0.5
                 y = controller.left_translation.y
-                z = controller.left_translation.z #- 0.25
+                z = controller.left_translation.z - 0.5
                 b.set_left_pose(position={'x': x, 'y': y, 'z':z})
                 last_left_pose = current_left_pose
                 print 'left baxter arm:', b.left_position
