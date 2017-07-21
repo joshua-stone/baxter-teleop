@@ -24,7 +24,7 @@ The Razer Hydra controller must be installed and configured:
 ```bash
 sudo apt-get install ros-indigo-razer-hydra
 roscd razer_hydra
-sudo config/99-hydra-indigo.rules /etc/udev/rules.d/ 
+sudo cp config/99-hydra-indigo.rules /etc/udev/rules.d/ 
 sudo udevadm control --reload-rules
 ```
 
