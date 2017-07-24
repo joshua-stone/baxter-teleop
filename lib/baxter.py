@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 
-from baxter_interface import Limb, Head, RobotEnable
+from baxter_interface import Limb, Head, RobotEnable, Gripper
 from geometry_msgs.msg import Pose, Point, Quaternion
 from lib.ikservice import IKService
 from rospy import init_node
@@ -14,8 +14,7 @@ __all__ = [
 LEFT, RIGHT = 'left', 'right'
 
 class Baxter(object):
-    def __init__(self):
- 
+    def __init__(self, calibrate_grippers=True): 
         self._baxter_state = RobotEnable()
 
         self._left = Limb(LEFT)
@@ -27,8 +26,43 @@ class Baxter(object):
         }
 
 	self._head = Head()
+	self._left_gripper, self._right_gripper = Gripper(LEFT), Gripper(RIGHT)
+        if calibrate_grippers:
+            self.calibrate()
+
         self._left_ikservice = IKService(LEFT)
         self._right_ikservice = IKService(RIGHT)
+
+    def calibrate(self):
+	self._left_gripper.calibrate()
+        self._left_gripper_max = self._left_gripper.position()
+
+	self._right_gripper.calibrate()
+        self._right_gripper_max = self._right_gripper.position()
+
+    @property
+    def left_gripper_max(self):
+        return self._left_gripper_max
+
+    @property
+    def right_gripper_max(self):
+        return self._right_gripper_max
+
+    @property
+    def left_gripper(self):
+        return self._left_gripper.position()
+
+    @left_gripper.setter
+    def left_gripper(self, position):
+        self._left_gripper.command_position(position)
+
+    @property
+    def right_gripper(self):
+        return self._right_gripper.position()
+
+    @right_gripper.setter
+    def right_gripper(self, position):
+        self._right_gripper.command_position(position)
 
     def set_left_joints(self, angles):
 	joints = self._left.joint_angles()
