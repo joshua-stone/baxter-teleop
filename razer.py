@@ -2,11 +2,13 @@
 
 from rospy import init_node, Subscriber, sleep, spin, Time, Duration
 from sensor_msgs.msg import Image, PointCloud
+from geometry_msgs.msg import Quaternion, Pose
 from razer_hydra.msg import Hydra
 from baxter_interface import Head, CameraController, Gripper, Limb
 from lib.baxter import Baxter
 from lib.hydracontroller import HydraController
 import rospy
+from tf.transformations import euler_from_quaternion, quaternion_from_euler
 
 CONTROLLER = '/hydra_calib'
 SONAR = '/robot/sonar/head_sonar/state'
@@ -52,12 +54,28 @@ def subscribe(data):
 	current_left_pose = Time.now()
 	current_right_pose = Time.now()
 
-	left_joy = controller.left_joy_horizontal
-	right_joy = controller.right_joy_horizontal
-	if not -0.01 < left_joy < 0.01:
-                b.left_w1 += left_joy * 0.1
-        if not -0.01 < right_joy < 0.01:
-		b.right_w1 += right_joy * 0.1
+	left_joy_horizontal = controller.left_joy_horizontal
+	right_joy_horizontal = controller.right_joy_horizontal
+        left_joy_vertical = controller.left_joy_vertical
+        right_joy_vertical = controller.right_joy_vertical
+
+	if not -0.01 < left_joy_horizontal < 0.01 or -0.01 < left_joy_vertical < 0.01:
+		w0 = baxter.left_w0 + left_joy_horizontal * 0.1
+                w1 = baxter.left_w1 + left_joy_vertical * 0.1
+		baxter.set_left_joints({'left_w0': w0, 'left_w1': w1 })
+
+        if not -0.01 < right_joy_horizontal < 0.01 or -0.01 < right_joy_vertical < 0.01:
+		w0 = baxter.right_w0 + right_joy_horizontal * 0.1
+                w1 = baxter.right_w1 + right_joy_vertical * 0.1
+
+		baxter.set_right_joints({'right_w0': w0, 'right_w1': w1 })
+		#baxter.right_w1 += right_joy_horizontal * 0.1
+
+        #if not -0.01 < left_joy_vertical < 0.01:
+        #        baxter.left_w1 += left_joy_horizontal * 0.1
+        #if not -0.01 < right_joy_vertical < 0.01:
+        #        baxter.right_w1 += right_joy_horizonal * 0.1
+
 	'''
 	if controller.right_joy_press:
 		j = controller.right_joy_horizontal
@@ -89,21 +107,56 @@ def subscribe(data):
 	'''
 
 	if controller.right_4 and current_right_pose - last_right_pose > LIMB_INTERVAL:
-		x = controller.right_translation.x
-		y = controller.right_translation.y
-		z = controller.right_translation.z
-		baxter.set_right_pose(position={'x': x, 'y': y, 'z':z})
+		right_translation, right_rotation = controller.right_translation, controller.right_rotation
+
+		position = {
+			'x': right_translation.x,
+			'y': right_translation.y,
+			'z': right_translation.z
+		}
+		orientation = {
+			'x': right_rotation.x,
+			'y': right_rotation.y,
+			'z': right_rotation.z,
+			'w': right_rotation.w
+		}
+		print baxter.right_orientation
+		#q = Quaternion(right_rotation.x, right_rotation.y, right_rotation.z, right_rotation.w)
+		#x, y, z = euler_from_quaternion((right_rotation.x, right_rotation.y, right_rotation.z, right_rotation.w))
+		#print 'controller:', x, y, z
+		#print 'con offset:', x * 7.6638672291773, y * -2.999, z * 0.3434353738201859
+		baxter.set_right_pose(position=position)
 		last_right_pose = current_right_pose
-		print 'right baxter arm:', baxter.right_position
-		print 'right controller:', x, y, z
+		#print 'baxter arm:', euler_from_quaternion(baxter.right_orientation)
+		#print ''
+		#quart = quaternion_from_euler(x * 7.6638672291773, y * -3, z * 0.3434353738201859)
+		#orientation = {
+                #        'x': quart[0],
+                #        'y': quart[1],
+                #        'z': quart[2],
+                #        'w': quart[3]
+                #}
+		#baxter.set_right_pose(position=position, orientation=orientation)
+		#print 'right controller:', x, y, z
+		#print 'right orientation:', 'x =', right_rotation.x, 'y =', right_rotation.y, 'z =', right_rotation.z, 'w =', right_rotation.w
         if controller.left_4 and current_left_pose - last_left_pose > LIMB_INTERVAL:
-                x = controller.left_translation.x
-                y = controller.left_translation.y
-                z = controller.left_translation.z
-                baxter.set_left_pose(position={'x': x, 'y': y, 'z':z})
+                left_translation, left_rotation = controller.left_translation, controller.left_rotation
+
+                position = {
+                        'x': left_translation.x,
+                        'y': left_translation.y,
+                        'z': left_translation.z
+                }
+                orientation = {
+                        'x': left_rotation.x,
+                        'y': left_rotation.y,
+                        'z': left_rotation.z,
+                        'w': left_rotation.w
+                }
+                baxter.set_left_pose(position=position)
                 last_left_pose = current_left_pose
-                print 'left baxter arm:', baxter.left_position
-                print 'left controller:', x, y, z
+                print 'left baxter arm:', baxter.left_orientation
+                print 'left controller:', orientation
 
 	if controller.left_3:
 		baxter.left_w2 += 0.1

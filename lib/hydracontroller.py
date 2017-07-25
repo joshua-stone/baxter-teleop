@@ -90,7 +90,7 @@ class HydraController(object):
                 return self._rjoy[0]
 
         @property
-        def left_joy_vertical(self):
+        def right_joy_vertical(self):
                 return self._rjoy[1]
 
         @property
